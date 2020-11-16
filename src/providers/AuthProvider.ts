@@ -2,7 +2,7 @@ import { messageTypes } from './../misc/messageTypes';
 import firebase from "firebase/app";
 import "firebase/auth";
 import { FirebaseAuth, User } from "@firebase/auth-types";
-import { log, CheckLogging, retrieveStatusTxt } from "../misc";
+import { log, CheckLogging, retrieveStatusTxt, AuthProvider } from "../misc";
 import { RAFirebaseOptions } from "./RAFirebaseOptions";
 import { FirebaseWrapper } from "./database/firebase/FirebaseWrapper";
 
@@ -62,20 +62,20 @@ class AuthClient {
     return this.auth.signOut();
   }
 
-  public HandleAuthError(errorHttp: messageTypes.HttpErrorType) {
+  public HandleAuthError(errorHttp: messageTypes.HttpErrorType): Promise<void> {
     log("HandleAuthLogin: invalid credentials", { errorHttp });
     const status = !!errorHttp && errorHttp.status;
     const statusTxt = retrieveStatusTxt(status);
     if (statusTxt === 'ok') {
-      return Promise.resolve("API is authenticated");
+      return Promise.resolve();
     }
     return Promise.reject("Recieved authentication error from API");
   }
 
 
 
-  public HandleAuthCheck() {
-    return this.getUserLogin();
+  public HandleAuthCheck(): Promise<void> {
+    return this.getUserLogin().then(res => Promise.resolve());
   }
 
   public getUserLogin(): Promise<User> {
@@ -195,7 +195,7 @@ class AuthClient {
   }
 }
 
-export function AuthProvider(firebaseConfig: {}, options: RAFirebaseOptions) {
+export function AuthProvider(firebaseConfig: {}, options: RAFirebaseOptions): AuthProvider {
   VerifyAuthProviderArgs(firebaseConfig, options);
   const auth = new AuthClient(firebaseConfig, options);
   CheckLogging(firebaseConfig, options);
